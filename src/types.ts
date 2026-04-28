@@ -1,5 +1,5 @@
 export type ServiceStatus = 'Pending' | 'In Progress' | 'Ready' | 'Done';
-export type UserRole = 'Admin' | 'Cashier' | 'Mechanic';
+export type UserRole = 'Admin' | 'Kasir' | 'Mekanik';
 export type SubscriptionTier = 'Free' | 'Basic' | 'Premium';
 
 export interface User {
@@ -53,11 +53,11 @@ export interface WorkshopService {
   diagnosis?: string;
   status: ServiceStatus;
   createdAt: string;
-  partsUsed: Array<{ 
-    partId: string; 
-    name: string; 
-    quantity: number; 
-    priceAtTime: number 
+  partsUsed: Array<{
+    partId: string;
+    name: string;
+    quantity: number;
+    priceAtTime: number
   }>;
   laborFee: number;
   totalAmount: number;
