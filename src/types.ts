@@ -81,3 +81,27 @@ export interface SubscriptionPlan {
   price: number;
   features: string[];
 }
+
+export interface Expense {
+  id: string;
+  category: string;
+  amount: number;
+  note: string;
+  date: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  address: string;
+}
+
+export interface PurchaseRecord {
+  id: string;
+  partId: string;
+  supplierId: string;
+  quantity: number;
+  costPrice: number;
+  date: string;
+}
