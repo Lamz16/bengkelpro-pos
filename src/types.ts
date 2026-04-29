@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   email: string;
   workshopName: string;
+  createdAt: string;
   subscription: {
     tier: SubscriptionTier;
     expiryDate: string | null;
