@@ -39,6 +39,7 @@ export interface SparePart {
   stock: number;
   minStock: number;
   lastUpdated: string;
+  supplierId?: string;
 }
 
 export interface WorkshopService {

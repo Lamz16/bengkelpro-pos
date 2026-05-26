@@ -806,13 +806,16 @@ const POSForm = ({ onSave, parts, customers, vehicles, onAddCustomer, onAddVehic
 };
 
 // --- Inventory Component ---
-const InventoryView = ({ parts, onAdd, onEdit, onDelete }: {
+const InventoryView = ({ parts, suppliers, purchases, onAdd, onEdit, onDelete }: {
     parts: SparePart[],
+    suppliers: Supplier[],
+    purchases: PurchaseRecord[],
     onAdd: () => void,
     onEdit: (p: SparePart) => void,
     onDelete: (id: string) => void
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeSubTab, setActiveSubTab] = useState<'stock' | 'purchases'>('stock');
 
     const filteredParts = useMemo(() => {
         return parts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -820,55 +823,129 @@ const InventoryView = ({ parts, onAdd, onEdit, onDelete }: {
 
     return (
         <div className="space-y-4 pb-20">
-            <div className="bg-amber-50 p-4 rounded-3xl border border-amber-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
-                        <AlertTriangle className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-black text-amber-700 uppercase tracking-widest leading-none">Peringatan Stok</p>
-                        <p className="text-[10px] text-amber-600 font-bold">{parts.filter(p => p.stock <= p.minStock).length} Barang menipis</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text" placeholder="Lookup parts..." value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="w-full h-12 pl-12 pr-4 bg-white border border-slate-100 rounded-2xl shadow-sm outline-none text-sm font-bold"
-                    />
-                </div>
-                <button onClick={onAdd} className="h-12 w-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100">
-                    <Plus className="w-6 h-6" />
+            {/* Sub Tab Navigation */}
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl border border-slate-200/60 shadow-inner">
+                <button
+                    onClick={() => setActiveSubTab('stock')}
+                    className={cn(
+                        "flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all",
+                        activeSubTab === 'stock'
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "text-slate-400 hover:text-slate-600"
+                    )}
+                >
+                    Daftar Stok
+                </button>
+                <button
+                    onClick={() => setActiveSubTab('purchases')}
+                    className={cn(
+                        "flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all",
+                        activeSubTab === 'purchases'
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "text-slate-400 hover:text-slate-600"
+                    )}
+                >
+                    Transaksi Masuk (Supplier)
                 </button>
             </div>
 
-            <div className="space-y-3">
-                {filteredParts.map((part) => (
-                    <div key={part.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
-                        <div className="flex items-center gap-4">
-                            <div className={cn(
-                                "w-12 h-12 rounded-xl flex items-center justify-center text-xs font-black",
-                                part.stock <= part.minStock ? "bg-rose-100 text-rose-600" : "bg-emerald-100 text-emerald-600"
-                            )}>
-                                {part.stock}
+            {activeSubTab === 'stock' ? (
+                <>
+                    <div className="bg-amber-50 p-4 rounded-3xl border border-amber-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                                <AlertTriangle className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-sm font-bold text-slate-900">{part.name}</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{part.category}</p>
-                                <p className="text-[11px] font-black text-blue-600 mt-1">Rp {(part.price || 0).toLocaleString()}</p>
+                                <p className="text-xs font-black text-amber-700 uppercase tracking-widest leading-none">Peringatan Stok</p>
+                                <p className="text-[10px] text-amber-600 font-bold">{parts.filter(p => p.stock <= p.minStock).length} Barang menipis</p>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => onEdit(part)} className="p-2 text-slate-400 hover:text-blue-600 bg-slate-50 rounded-lg"><Edit className="w-4 h-4" /></button>
-                            <button onClick={() => onDelete(part.id)} className="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                        </div>
                     </div>
-                ))}
-            </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text" placeholder="Lookup parts..." value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full h-12 pl-12 pr-4 bg-white border border-slate-100 rounded-2xl shadow-sm outline-none text-sm font-bold"
+                            />
+                        </div>
+                        <button onClick={onAdd} className="h-12 w-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100 shrink-0">
+                            <Plus className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <div className="space-y-3">
+                        {filteredParts.map((part) => {
+                            const supplier = suppliers.find(s => s.id === part.supplierId);
+                            return (
+                                <div key={part.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-xl flex items-center justify-center text-xs font-black",
+                                            part.stock <= part.minStock ? "bg-rose-100 text-rose-600" : "bg-emerald-100 text-emerald-600"
+                                        )}>
+                                            {part.stock}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">{part.name}</p>
+                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                <span className="text-[8px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">{part.category}</span>
+                                                {supplier && (
+                                                    <span className="text-[8px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                            Pemasok: {supplier.name}
+                          </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-500 font-bold">
+                                                <p>Jual: <span className="text-blue-600">Rp {(part.price || 0).toLocaleString()}</span></p>
+                                                <p>•</p>
+                                                <p>Beli: <span className="text-slate-700">Rp {(part.purchasePrice || 0).toLocaleString()}</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => onEdit(part)} className="p-2 text-slate-400 hover:text-blue-600 bg-slate-50 rounded-lg"><Edit className="w-4 h-4" /></button>
+                                        <button onClick={() => onDelete(part.id)} className="p-2 text-slate-400 hover:text-rose-600 bg-slate-50 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </>
+            ) : (
+                <div className="space-y-3">
+                    {purchases.map((pr) => {
+                        const part = parts.find(p => p.id === pr.partId);
+                        const supplier = suppliers.find(s => s.id === pr.supplierId);
+                        return (
+                            <div key={pr.id} className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-950">{part?.name || 'Part Terhapus'}</p>
+                                    <p className="text-[10px] text-blue-600 font-extrabold uppercase mt-0.5 tracking-wider">
+                                        Supplier: {supplier?.name || 'Umum'}
+                                    </p>
+                                    <p className="text-[9px] text-slate-400 font-semibold mt-1">
+                                        {format(new Date(pr.date), 'dd/MM/yyyy HH:mm')}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-black text-emerald-600 font-mono">+{pr.quantity} Pcs</p>
+                                    <p className="text-[9px] text-slate-400 font-bold">@Rp {(pr.costPrice || 0).toLocaleString()}</p>
+                                    <p className="text-xs font-black text-slate-900 mt-1">Total: Rp {((pr.costPrice || 0) * pr.quantity).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {purchases.length === 0 && (
+                        <div className="p-12 text-center text-slate-400 text-xs font-extrabold bg-white rounded-[32px] border border-dashed border-slate-200">
+                            Belum ada transaksi barang masuk dari pemasok.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
@@ -1672,7 +1749,7 @@ const SupplierForm = ({ supplier, onSave, onCancel }: { supplier?: Supplier, onS
 };
 
 // --- Add Part Modal Content ---
-const PartForm = ({ part, onSave, onCancel }: { part?: SparePart, onSave: (p: SparePart) => void, onCancel: () => void }) => {
+const PartForm = ({ part, suppliers, onSave, onCancel }: { part?: SparePart, suppliers: Supplier[], onSave: (p: SparePart) => void, onCancel: () => void }) => {
     const [formData, setFormData] = useState<SparePart>(part || {
         id: 'P' + Math.floor(Math.random() * 1000),
         name: '',
@@ -1681,7 +1758,8 @@ const PartForm = ({ part, onSave, onCancel }: { part?: SparePart, onSave: (p: Sp
         stock: 0,
         minStock: 5,
         category: 'Oli',
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        supplierId: ''
     });
 
     return (
@@ -1735,6 +1813,21 @@ const PartForm = ({ part, onSave, onCancel }: { part?: SparePart, onSave: (p: Sp
                     </select>
                 </div>
             </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Pemasok / Supplier Terhubung</label>
+                <select
+                    value={formData.supplierId || ''}
+                    onChange={e => setFormData({ ...formData, supplierId: e.target.value || undefined })}
+                    className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold"
+                >
+                    <option value="">-- Tanpa Hubungan Supplier (Atur Nanti) --</option>
+                    {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.contact})</option>
+                    ))}
+                </select>
+            </div>
+
             <div className="flex gap-2 pt-4">
                 <button onClick={onCancel} className="flex-1 h-14 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest">Batal</button>
                 <button onClick={() => onSave(formData)} className="flex-1 h-14 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-100">Simpan</button>
@@ -1846,36 +1939,75 @@ const Modal = ({ children, onClose, title }: { children: React.ReactNode, onClos
 );
 
 // --- Add Stock Modal Content ---
-const AddStockForm = ({ parts, onSave }: { parts: SparePart[], onSave: (partId: string, amount: number) => void }) => {
+const AddStockForm = ({ parts, suppliers, onSave }: { parts: SparePart[], suppliers: Supplier[], onSave: (partId: string, amount: number, supplierId: string, costPrice: number) => void }) => {
     const [selectedPartId, setSelectedPartId] = useState(parts[0]?.id || '');
     const [amount, setAmount] = useState('0');
 
+    const currentPart = useMemo(() => parts.find(p => p.id === selectedPartId), [parts, selectedPartId]);
+    const [costPrice, setCostPrice] = useState('0');
+    const [selectedSupplierId, setSelectedSupplierId] = useState('');
+
+    useEffect(() => {
+        if (currentPart) {
+            setCostPrice(String(currentPart.purchasePrice || 0));
+            setSelectedSupplierId(currentPart.supplierId || suppliers[0]?.id || '');
+        }
+    }, [selectedPartId, currentPart, suppliers]);
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Select Sparepart</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Pilih Sparepart</label>
                 <select
                     value={selectedPartId}
                     onChange={e => setSelectedPartId(e.target.value)}
                     className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold"
                 >
-                    {parts.map(p => <option key={p.id} value={p.id}>{p.name} ({p.stock} left)</option>)}
+                    {parts.map(p => <option key={p.id} value={p.id}>{p.name} (Stok: {p.stock})</option>)}
                 </select>
             </div>
-            <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Amount to Add</label>
-                <input
-                    type="number"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold"
-                />
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Jumlah Tambahan</label>
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold"
+                        placeholder="0"
+                    />
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Harga Beli Baru (per Pcs)</label>
+                    <input
+                        type="number"
+                        value={costPrice}
+                        onChange={e => setCostPrice(e.target.value)}
+                        className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold"
+                        placeholder="0"
+                    />
+                </div>
             </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Pilih Pemasok / Supplier</label>
+                <select
+                    value={selectedSupplierId}
+                    onChange={e => setSelectedSupplierId(e.target.value)}
+                    className="w-full h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold"
+                >
+                    {suppliers.length === 0 && <option value="">-- Daftarkan supplier terlebih dahulu --</option>}
+                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.contact})</option>)}
+                </select>
+            </div>
+
             <button
-                onClick={() => onSave(selectedPartId, Number(amount))}
-                className="w-full h-14 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-200 active:scale-95 transition-all"
+                onClick={() => onSave(selectedPartId, Number(amount), selectedSupplierId, Number(costPrice))}
+                disabled={!selectedSupplierId || Number(amount) <= 0}
+                className="w-full h-14 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-200 active:scale-95 transition-all disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
-                Increase Stock
+                Tambah Stok & Simpan Transaksi
             </button>
         </div>
     );
@@ -2187,12 +2319,31 @@ export default function AppLayout() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<string>('dashboard');
     const [showPOSForm, setShowPOSForm] = useState(false);
-    const [parts, setParts] = useState<SparePart[]>(INITIAL_PARTS);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([
         { id: 'SUP-1', name: 'Distributor Suku Cadang A', contact: '0812345678', address: 'Jl. Industri No. 10' }
     ]);
-    const [purchases, setPurchases] = useState<PurchaseRecord[]>([]);
+    const [parts, setParts] = useState<SparePart[]>(() =>
+        INITIAL_PARTS.map((p, index) => index % 2 === 0 ? { ...p, supplierId: 'SUP-1' } : p)
+    );
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [purchases, setPurchases] = useState<PurchaseRecord[]>([
+        {
+            id: 'PR-1',
+            partId: 'P001',
+            supplierId: 'SUP-1',
+            quantity: 12,
+            costPrice: 75000,
+            date: new Date(Date.now() - 3600000 * 24 * 3).toISOString()
+        },
+        {
+            id: 'PR-2',
+            partId: 'P003',
+            supplierId: 'SUP-1',
+            quantity: 10,
+            costPrice: 45000,
+            date: new Date(Date.now() - 3600000 * 12).toISOString()
+        }
+    ]);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
     const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -2311,8 +2462,47 @@ export default function AppLayout() {
         setSelectedServiceId(null);
     };
 
-    const handleAddStock = (partId: string, amount: number) => {
-        setParts(prev => prev.map(p => p.id === partId ? { ...p, stock: p.stock + amount } : p));
+    const handleAddStock = (partId: string, amount: number, supplierId: string, costPrice: number) => {
+        setParts(prev => prev.map(p => {
+            if (p.id === partId) {
+                return {
+                    ...p,
+                    stock: p.stock + amount,
+                    supplierId: supplierId || p.supplierId,
+                    purchasePrice: costPrice > 0 ? costPrice : p.purchasePrice
+                };
+            }
+            return p;
+        }));
+
+        if (amount > 0 && supplierId) {
+            const newPurchase: PurchaseRecord = {
+                id: 'PR-' + Math.floor(Math.random() * 100000),
+                partId,
+                supplierId,
+                quantity: amount,
+                costPrice: costPrice || 0,
+                date: new Date().toISOString()
+            };
+            setPurchases(prev => [newPurchase, ...prev]);
+
+            // Atur otomatis pengeluaran baru dari pembelian sparepart ini
+            const part = parts.find(p => p.id === partId);
+            const supplier = suppliers.find(s => s.id === supplierId);
+            const partName = part ? part.name : 'Suku Cadang';
+            const supplierName = supplier ? supplier.name : 'Supplier';
+            const totalCost = (costPrice || 0) * amount;
+
+            const newExpense: Expense = {
+                id: 'EXP-' + Math.floor(Math.random() * 100000),
+                category: 'Suku Cadang',
+                amount: totalCost,
+                note: `Beli Stok ${partName} x${amount} Pcs dari ${supplierName}`,
+                date: new Date().toISOString()
+            };
+            setExpenses(prev => [newExpense, ...prev]);
+        }
+
         setShowAddStock(false);
     };
 
@@ -2547,6 +2737,8 @@ export default function AppLayout() {
                             <motion.div key="inventory" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                 <InventoryView
                                     parts={parts}
+                                    suppliers={suppliers}
+                                    purchases={purchases}
                                     onAdd={() => setEditingPart({} as SparePart)}
                                     onEdit={(p) => setEditingPart(p)}
                                     onDelete={(id) => setParts(prev => prev.filter(x => x.id !== id))}
@@ -2675,9 +2867,10 @@ export default function AppLayout() {
                     )}
 
                     {showAddStock && (
-                        <Modal title="Add Inventory Stock" onClose={() => setShowAddStock(false)}>
+                        <Modal title="Tambah Stok Barang" onClose={() => setShowAddStock(false)}>
                             <AddStockForm
                                 parts={parts}
+                                suppliers={suppliers}
                                 onSave={handleAddStock}
                             />
                         </Modal>
@@ -2687,6 +2880,7 @@ export default function AppLayout() {
                         <Modal title={editingPart.name ? "Edit Part" : "Tambah Part Baru"} onClose={() => setEditingPart(null)}>
                             <PartForm
                                 part={editingPart.name ? editingPart : undefined}
+                                suppliers={suppliers}
                                 onSave={(p) => {
                                     if (editingPart.name) {
                                         setParts(prev => prev.map(x => x.id === p.id ? p : x));
