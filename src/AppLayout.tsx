@@ -806,11 +806,12 @@ const POSForm = ({ onSave, parts, customers, vehicles, onAddCustomer, onAddVehic
 };
 
 // --- Inventory Component ---
-const InventoryView = ({ parts, suppliers, purchases, onAdd, onEdit, onDelete }: {
+const InventoryView = ({ parts, suppliers, purchases, onAdd, onAddStock, onEdit, onDelete }: {
     parts: SparePart[],
     suppliers: Supplier[],
     purchases: PurchaseRecord[],
     onAdd: () => void,
+    onAddStock: () => void,
     onEdit: (p: SparePart) => void,
     onDelete: (id: string) => void
 }) => {
@@ -872,6 +873,13 @@ const InventoryView = ({ parts, suppliers, purchases, onAdd, onEdit, onDelete }:
                                 className="w-full h-12 pl-12 pr-4 bg-white border border-slate-100 rounded-2xl shadow-sm outline-none text-sm font-bold"
                             />
                         </div>
+                        <button
+                            onClick={onAddStock}
+                            className="hidden md:flex items-center gap-2 h-12 px-5 bg-amber-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-amber-100 hover:bg-amber-600 transition-colors shrink-0"
+                        >
+                            <Package className="w-4 h-4" />
+                            Tambah Stok
+                        </button>
                         <button onClick={onAdd} className="h-12 w-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100 shrink-0">
                             <Plus className="w-6 h-6" />
                         </button>
@@ -2740,12 +2748,13 @@ export default function AppLayout() {
                                     suppliers={suppliers}
                                     purchases={purchases}
                                     onAdd={() => setEditingPart({} as SparePart)}
+                                    onAddStock={() => setShowAddStock(true)}
                                     onEdit={(p) => setEditingPart(p)}
                                     onDelete={(id) => setParts(prev => prev.filter(x => x.id !== id))}
                                 />
                                 <button
                                     onClick={() => setShowAddStock(true)}
-                                    className="fixed bottom-24 right-4 w-14 h-14 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-xl shadow-amber-100 lg:hidden"
+                                    className="fixed bottom-24 right-4 w-14 h-14 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-xl shadow-amber-100 md:hidden"
                                 >
                                     <Package className="w-6 h-6" />
                                 </button>
